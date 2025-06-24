@@ -3,7 +3,7 @@
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
 #
-# e.g. 1999-ACC-AHRI990c.pdf
+# e.g. 1999-ACC-990c.pdf
 #
 #
 #
@@ -26,7 +26,7 @@ $incorrect_file_count = 0
 $unsorted_file_count = 0
 $dupe_file_count = 0
 
-$homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject"
+$homedir = "C:\"
 $documents = dir -include "*.pdf" -name # only PDF documents
 foreach($file in $documents){
 	$fileinfo=$file -split "-"
@@ -79,7 +79,7 @@ foreach($file in $documents){
 			break
 		}
     		"NATE" {
-			$category="NATE Documents"
+			$category="Org Documents"
 			break
 		}
     		"REP" {
@@ -88,10 +88,6 @@ foreach($file in $documents){
 		}
     		"LEG" {
 			$category="Legal"
-			break
-		}
-    		"RM" {
-			$category="Rulemaking"
 			break
 		}
 		"SD" {
@@ -149,7 +145,6 @@ foreach($file in $documents){
 	}
 
 }
-# All done! If there are no duplicates, we can celebrate and change the background color! Otherwise, list out our problems.
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
 	$Host.UI.RawUI.ForegroundColor = "Green"
 	echo "Script finished with zero errors!!!"
