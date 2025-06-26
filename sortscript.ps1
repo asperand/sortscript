@@ -3,7 +3,7 @@
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
 #
-# e.g. 1999-ACC-990c.pdf
+# e.g. 1999-ACC-AHRI990c.pdf
 #
 #
 #
@@ -13,22 +13,38 @@
 #
 # e.g. Undated-ACC-BuildingContract.pdf
 #
-# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add the logic to the switch statement
-# found at line 57.
+# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add the logic to the switch statement.
+#
 #
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
 ### BEGIN SCRIPT
 
+# Setting write-progress style
+
+# GOES HERE
+
 # These are for better output when the script finishes.
 $incorrect_file_count = 0
 $unsorted_file_count = 0
 $dupe_file_count = 0
+$current_file_count = 0
 
-$homedir = "C:\"
-$documents = dir -include "*.pdf" -name # only PDF documents
+# Hard-coded home directory to ensure our files are going in the right place
+# CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
+$homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject"
+
+# only PDF documents
+$documents = dir -include "*.pdf" -name
+$total_file_count = $documents.length
+
+# Our main loop for going through every pdf file in our list
+
 foreach($file in $documents){
+	
+	# You can feel free to change the delimiter to whatever character you prefer here if you want to change the naming convention
+
 	$fileinfo=$file -split "-"
 	
 	#
@@ -38,19 +54,18 @@ foreach($file in $documents){
 	# 1999-acc-.pdf, -acc-.pdf, --.pdf, 1999accfile.pdf, are filtered out and skipped.
 	#
 
-	if(($fileinfo.length -ne 3) -or
-		($fileinfo[0] -eq $homedir + "\Staging\") -or # Missing subfolder name or wrong use of dashes
-		($fileinfo[2] -eq ".pdf") -or # Missing filename or wrong use of dashes
-		($fileinfo.contains("")) # Empty string anywhere in the array
+	if(($fileinfo.length -ne 3) -or 			# Error of too little or too many dashes
+		($fileinfo[0] -eq $homedir + "\Staging\") -or 	# Error of missing subfolder name or wrong use of dashes
+		($fileinfo[2] -eq ".pdf") -or 			# Error of missing filename or wrong use of dashes
+		($fileinfo.contains("")) 			# Error of an empty string anywhere in the array
 
-	){
-		$Host.UI.RawUI.BackgroundColor = "DarkRed"
-		echo -n "`nERROR:"
-		$Host.UI.RawUI.BackgroundColor = "Black" 
-		echo "Skipping $file due to incorrect naming convention."
+	){ # Print our error message
+		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		write-host " Skipping $file due to incorrect naming convention."
 		$incorrect_file_count++
 		continue
 	}
+
 	#
 	# This switch block is where you can add new categories to the file reader.
 	# If you follow the same format, it should work with no problems as the script
@@ -79,7 +94,7 @@ foreach($file in $documents){
 			break
 		}
     		"NATE" {
-			$category="Org Documents"
+			$category="NATE Documents"
 			break
 		}
     		"REP" {
@@ -90,6 +105,10 @@ foreach($file in $documents){
 			$category="Legal"
 			break
 		}
+    		"RM" {
+			$category="Rulemaking"
+			break
+		}
 		"SD" {
 			$category="Staff Documents"
 			break
@@ -98,12 +117,10 @@ foreach($file in $documents){
 			$category="HR"
 			break
 		}
-		default {
+		default { # If the given category isn't found
 			$category="Staging\Unsorted"
-			$Host.UI.RawUI.BackgroundColor = "DarkRed"
-			echo "`nERROR:" 
-			$Host.UI.RawUI.BackgroundColor = "Black"
-			echo "Incorrect category $fileinfo[1]. Sending to .\Unsorted"
+			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
+			write-host " Incorrect category $fileinfo[1]. Sending to .\Unsorted"
 			$unsorted_file_count++
 			break
 		}
@@ -113,10 +130,8 @@ foreach($file in $documents){
     	$targetpath=$homedir + "\" + $category + "\" + $fileinfo[0]
    	ni -itemtype Directory -force -path $targetpath | Out-Null # ensure year directory exists
    	$targetfile=$targetpath+"\"+$fileinfo[2]
-	$Host.UI.RawUI.BackgroundColor = "DarkGreen"
-   	echo "`nACTION:"
-	$Host.UI.RawUI.BackgroundColor = "Black" 
-	echo "Moving file $file to $targetpath"
+	$current_file_count++
+   	write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Moving $file"
 	mv $file $targetfile -ErrorAction 'silentlycontinue' | Out-Null
 	
 	#
@@ -136,34 +151,30 @@ foreach($file in $documents){
 		$rand = get-random -maximum 9999
 		$dupefile = $file | get-childitem
 		$dupepath = ".\Duplicates" + "\" + $dupefile.basename + "_" + $rand.toString() + $dupefile.extension
-		$Host.UI.RawUI.BackgroundColor = "DarkRed"
-		echo "`nERROR:"
-		$Host.UI.RawUI.BackgroundColor = "Black"
-		echo "File move failed, likely because filename already exists. Moving $file to $dupepath."
+		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		write-host " File move failed, likely because filename already exists. Moving $file to $dupepath."
 		mv $file $dupepath -ErrorAction 'silentlycontinue' | Out-Null
 		$dupe_flag = $?
 	}
-
 }
+# All done! If there are no errors, we can celebrate! Otherwise, list out our problems.
+write-progress -Id 0 -Completed
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
-	$Host.UI.RawUI.ForegroundColor = "Green"
-	echo "Script finished with zero errors!!!"
-	$Host.UI.RawUI.BackgroundColor = "Black"
+	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
 else{
-	$Host.UI.RawUI.ForegroundColor = "Yellow"
-	echo "`nScript finished with:"
+	write-host -ForegroundColor yellow "`nScript finished with:"
 	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	echo "$incorrect_file_count skipped files"
+	write-host "$incorrect_file_count skipped files"
 	if($unsorted_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	echo "$unsorted_file_count files sent to \Unsorted\"
+	write-host "$unsorted_file_count files sent to \Unsorted\"
 	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	echo "$dupe_file_count duplicate files sent to \Duplicates\`n"
+	write-host "$dupe_file_count duplicate files sent to \Duplicates\`n"
 	$Host.UI.RawUI.ForegroundColor = "White"
 }
-$Host.UI.RawUI.BackgroundColor = "Black"
+$Host.UI.RawUI.ForegroundColor = "White"
 Write-Host -NoNewLine 'Press any key to continue...';
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
