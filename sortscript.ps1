@@ -21,9 +21,9 @@
 
 ### BEGIN SCRIPT
 
-# Setting write-progress style
-
-# GOES HERE
+# Setting our console cursor position to bottom
+$windowHeight = [Console]::WindowHeight
+[Console]::SetCursorPosition(0, ($windowHeight - 1))
 
 # These are for better output when the script finishes.
 $incorrect_file_count = 0
@@ -61,7 +61,7 @@ foreach($file in $documents){
 
 	){ # Print our error message
 		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-		write-host " Skipping $file due to incorrect naming convention."
+		write-host -NoNewLine -BackgroundColor Black " Skipping $file due to incorrect naming convention."
 		$incorrect_file_count++
 		continue
 	}
@@ -120,7 +120,7 @@ foreach($file in $documents){
 		default { # If the given category isn't found
 			$category="Staging\Unsorted"
 			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
-			write-host " Incorrect category $fileinfo[1]. Sending to .\Unsorted"
+			write-host -NoNewLine -BackgroundColor Black " Incorrect category $fileinfo[1]. Sending to .\Unsorted`n"
 			$unsorted_file_count++
 			break
 		}
@@ -152,13 +152,13 @@ foreach($file in $documents){
 		$dupefile = $file | get-childitem
 		$dupepath = ".\Duplicates" + "\" + $dupefile.basename + "_" + $rand.toString() + $dupefile.extension
 		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-		write-host " File move failed, likely because filename already exists. Moving $file to $dupepath."
+		write-host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupepath.`n"
 		mv $file $dupepath -ErrorAction 'silentlycontinue' | Out-Null
 		$dupe_flag = $?
 	}
 }
 # All done! If there are no errors, we can celebrate! Otherwise, list out our problems.
-write-progress -Id 0 -Completed
+write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -Completed
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
 	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
@@ -172,7 +172,7 @@ else{
 	write-host "$unsorted_file_count files sent to \Unsorted\"
 	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$dupe_file_count duplicate files sent to \Duplicates\`n"
+	write-host "$dupe_file_count duplicate files sent to \Duplicates\"
 	$Host.UI.RawUI.ForegroundColor = "White"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
