@@ -33,9 +33,11 @@ $current_file_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
+
 $homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject"
 
 # only PDF documents
+
 $documents = dir -include "*.pdf" -name
 $total_file_count = $documents.length
 
@@ -69,10 +71,10 @@ foreach($file in $documents){
 	#
 	# This switch block is where you can add new categories to the file reader.
 	# If you follow the same format, it should work with no problems as the script
-	# WILL ensure that a directory with name $category exists  or is created before continuing.
+	# WILL ensure that a directory with name $category exists or is created before continuing.
 	#
 
-	switch($fileinfo[1]){ # assign correct directory name based on category written
+	switch($fileinfo[1].toUpper()){ # assign correct directory name based on category written
 		"ACC" {
 			$category="Accounting"
 			break
@@ -117,7 +119,7 @@ foreach($file in $documents){
 			$category="HR"
 			break
 		}
-		default { # If the given category isn't found
+		default { # If the given category isn't found or is incorrectly spelled
 			$category="Staging\Unsorted"
 			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
 			write-host -NoNewLine -BackgroundColor Black " Incorrect category $fileinfo[1]. Sending to .\Unsorted`n"
@@ -162,7 +164,7 @@ write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $to
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
 	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
-else{
+else{ # This could use a bit of cleanup.
 	write-host -ForegroundColor yellow "`nScript finished with:"
 	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
@@ -176,5 +178,5 @@ else{
 	$Host.UI.RawUI.ForegroundColor = "White"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
-Write-Host -NoNewLine 'Press any key to continue...';
-$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+Write-Host -NoNewLine 'Press any key to close window...';
+$key_pressed = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
