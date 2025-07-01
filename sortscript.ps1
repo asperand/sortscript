@@ -161,6 +161,7 @@ foreach($file in $documents){
 }
 # All done! If there are no errors, we can celebrate! Otherwise, list out our problems.
 write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -Completed
+$total_file_count = 0 # Extra line to fix the problem of file counts carrying over from session to session.
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
 	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
