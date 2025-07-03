@@ -30,16 +30,31 @@ $incorrect_file_count = 0
 $unsorted_file_count = 0
 $dupe_file_count = 0
 $current_file_count = 0
+$warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
-
 $homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject"
-
+$stagingdir = $homedir + "\Staging" # No need to change this unless you want to rename the default structure.
 # only PDF documents
-
 $documents = dir -include "*.pdf" -name
 $total_file_count = $documents.length
+
+# Some extra warnings to ensure our user is using the script correctly.
+
+# Give our user a warning if no files were found.
+if($total_file_count -eq 0){
+	write-host -BackgroundColor "darkyellow" "`nWARN:"
+	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. Ensure the script is in the right directory!`nThe home directory is set to: $homedir`nThe script should be in $homedir\Staging."
+	$warning_count++
+}
+
+# Give our user a warning if the current working directory is wrong.
+if($pwd.path -ne $stagingdir){
+	write-host -BackgroundColor "darkyellow" "`nWARN:"
+	write-host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $stagingdir`nor change the home directory."
+	$warning_count++
+}
 
 # Our main loop for going through every pdf file in our list
 
@@ -71,7 +86,7 @@ foreach($file in $documents){
 	#
 	# This switch block is where you can add new categories to the file reader.
 	# If you follow the same format, it should work with no problems as the script
-	# WILL ensure that a directory with name $category exists or is created before continuing.
+	# WILL ensure that a directory with name $category exists  or is created before continuing.
 	#
 
 	switch($fileinfo[1].toUpper()){ # assign correct directory name based on category written
@@ -119,7 +134,7 @@ foreach($file in $documents){
 			$category="HR"
 			break
 		}
-		default { # If the given category isn't found or is incorrectly spelled
+		default { # If the given category isn't found
 			$category="Staging\Unsorted"
 			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
 			write-host -NoNewLine -BackgroundColor Black " Incorrect category $fileinfo[1]. Sending to .\Unsorted`n"
@@ -162,7 +177,7 @@ foreach($file in $documents){
 # All done! If there are no errors, we can celebrate! Otherwise, list out our problems.
 write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -Completed
 $total_file_count = 0 # Extra line to fix the problem of file counts carrying over from session to session.
-if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0)){
+if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0) -and ($warning_count -eq 0)){
 	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
 else{ # This could use a bit of cleanup.
@@ -176,8 +191,11 @@ else{ # This could use a bit of cleanup.
 	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
 	write-host "$dupe_file_count duplicate files sent to \Duplicates\"
+	if($warning_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
+	else{$Host.UI.RawUI.ForegroundColor = "DarkYellow"}
+	write-host "$warning_count system warnings thrown"
 	$Host.UI.RawUI.ForegroundColor = "White"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
-Write-Host -NoNewLine 'Press any key to close window...';
+Write-Host -NoNewLine "`nPress any key to close window...";
 $key_pressed = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
