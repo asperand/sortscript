@@ -21,11 +21,13 @@
 
 ### BEGIN SCRIPT
 
-# Setting our console cursor position to bottom
+# Setting our console cursor position to bottom to make space for write-progress
+
 $windowHeight = [Console]::WindowHeight
 [Console]::SetCursorPosition(0, ($windowHeight - 1))
 
 # These are for better output when the script finishes.
+
 $incorrect_file_count = 0
 $unsorted_file_count = 0
 $dupe_file_count = 0
@@ -33,14 +35,17 @@ $current_file_count = 0
 $warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
-# CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
-$homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject"
+
+$homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
 $stagingdir = $homedir + "\Staging" # No need to change this unless you want to rename the default structure.
-# only PDF documents
+
+# only select PDF documents
 $documents = dir -include "*.pdf" -name
 $total_file_count = $documents.length
 
+#
 # Some extra warnings to ensure our user is using the script correctly.
+#
 
 # Give our user a warning if no files were found.
 if($total_file_count -eq 0){
@@ -56,7 +61,9 @@ if($pwd.path -ne $stagingdir){
 	$warning_count++
 }
 
+#
 # Our main loop for going through every pdf file in our list
+#
 
 foreach($file in $documents){
 	
@@ -86,7 +93,7 @@ foreach($file in $documents){
 	#
 	# This switch block is where you can add new categories to the file reader.
 	# If you follow the same format, it should work with no problems as the script
-	# WILL ensure that a directory with name $category exists  or is created before continuing.
+	# WILL ensure that a directory with name $category exists or is created before continuing.
 	#
 
 	switch($fileinfo[1].toUpper()){ # assign correct directory name based on category written
@@ -181,7 +188,7 @@ if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_f
 	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
 else{ # This could use a bit of cleanup.
-	write-host -ForegroundColor yellow "`nScript finished with:"
+	write-host -ForegroundColor yellow "`n`nScript finished with:"
 	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
 	write-host "$incorrect_file_count skipped file(s)"
