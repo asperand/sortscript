@@ -45,7 +45,7 @@ $total_file_count = $documents.length
 # Give our user a warning if no files were found.
 if($total_file_count -eq 0){
 	write-host -BackgroundColor "darkyellow" "`nWARN:"
-	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. Ensure the script is in the right directory!`nThe home directory is set to: $homedir`nThe script should be in $homedir\Staging."
+	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $homedir"
 	$warning_count++
 }
 
@@ -184,16 +184,16 @@ else{ # This could use a bit of cleanup.
 	write-host -ForegroundColor yellow "`nScript finished with:"
 	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$incorrect_file_count skipped files"
+	write-host "$incorrect_file_count skipped file(s)"
 	if($unsorted_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$unsorted_file_count files sent to \Unsorted\"
+	write-host "$unsorted_file_count file(s) sent to \Unsorted\"
 	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$dupe_file_count duplicate files sent to \Duplicates\"
+	write-host "$dupe_file_count duplicate file(s) sent to \Duplicates\"
 	if($warning_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "DarkYellow"}
-	write-host "$warning_count system warnings thrown"
+	write-host "$warning_count system warning(s) thrown"
 	$Host.UI.RawUI.ForegroundColor = "White"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
