@@ -23,8 +23,8 @@
 
 # Setting our console cursor position to bottom to make space for write-progress
 
-$windowHeight = [Console]::WindowHeight
-[Console]::SetCursorPosition(0, ($windowHeight - 1))
+$window_height = [Console]::WindowHeight
+[Console]::SetCursorPosition(0, ($window_height - 1))
 
 # These are for better output when the script finishes.
 
@@ -36,8 +36,8 @@ $warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 
-$homedir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
-$stagingdir = $homedir + "\Staging" # No need to change this unless you want to rename the default structure.
+$default_dir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
+$staging_dir = $default_dir + "\Staging" # No need to change this unless you want to rename the default structure.
 
 # only select PDF documents
 $documents = dir -include "*.pdf" -name
@@ -50,14 +50,14 @@ $total_file_count = $documents.length
 # Give our user a warning if no files were found.
 if($total_file_count -eq 0){
 	write-host -BackgroundColor "darkyellow" "`nWARN:"
-	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $homedir"
+	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $default_dir"
 	$warning_count++
 }
 
 # Give our user a warning if the current working directory is wrong.
-if($pwd.path -ne $stagingdir){
+if($pwd.path -ne $staging_dir){
 	write-host -BackgroundColor "darkyellow" "`nWARN:"
-	write-host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $stagingdir`nor change the home directory."
+	write-host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $staging_dir`nor change the home directory."
 	$warning_count++
 }
 
@@ -69,7 +69,7 @@ foreach($file in $documents){
 	
 	# You can feel free to change the delimiter to whatever character you prefer here if you want to change the naming convention
 
-	$fileinfo=$file -split "-"
+	$file_info=$file -split "-"
 	
 	#
 	# Some error checking on the name of the file before we try to sort it.
@@ -78,10 +78,10 @@ foreach($file in $documents){
 	# 1999-acc-.pdf, -acc-.pdf, --.pdf, 1999accfile.pdf, are filtered out and skipped.
 	#
 
-	if(($fileinfo.length -ne 3) -or 			# Error of too little or too many dashes
-		($fileinfo[0] -eq $homedir + "\Staging\") -or 	# Error of missing subfolder name or wrong use of dashes
-		($fileinfo[2] -eq ".pdf") -or 			# Error of missing filename or wrong use of dashes
-		($fileinfo.contains("")) 			# Error of an empty string anywhere in the array
+	if(($file_info.length -ne 3) -or 			# Error of too little or too many dashes
+		($file_info[0] -eq $default_dir + "\Staging\") -or 	# Error of missing subfolder name or wrong use of dashes
+		($file_info[2] -eq ".pdf") -or 			# Error of missing filename or wrong use of dashes
+		($file_info.contains("")) 			# Error of an empty string anywhere in the array
 
 	){ # Print our error message
 		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
@@ -96,7 +96,7 @@ foreach($file in $documents){
 	# WILL ensure that a directory with name $category exists or is created before continuing.
 	#
 
-	switch($fileinfo[1].toUpper()){ # assign correct directory name based on category written
+	switch($file_info[1].toUpper()){ # assign correct directory name based on category written
 		"ACC" {
 			$category="Accounting"
 			break
@@ -144,19 +144,19 @@ foreach($file in $documents){
 		default { # If the given category isn't found
 			$category="Staging\Unsorted"
 			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
-			write-host -NoNewLine -BackgroundColor Black " Incorrect category $fileinfo[1]. Sending to .\Unsorted`n"
+			write-host -NoNewLine -BackgroundColor Black " Incorrect category $file_info[1]. Sending to .\Unsorted`n"
 			$unsorted_file_count++
 			break
 		}
    	}
-	$categorydir = $homedir + "\" + $category + "\"
+	$categorydir = $default_dir + "\" + $category + "\"
    	ni -itemtype Directory -force -path $categorydir | Out-Null # ensure category directory exists
-    	$targetpath=$homedir + "\" + $category + "\" + $fileinfo[0]
-   	ni -itemtype Directory -force -path $targetpath | Out-Null # ensure year directory exists
-   	$targetfile=$targetpath+"\"+$fileinfo[2]
+    	$target_path=$default_dir + "\" + $category + "\" + $file_info[0]
+   	ni -itemtype Directory -force -path $target_path | Out-Null # ensure year directory exists
+   	$target_file=$target_path+"\"+$file_info[2]
 	$current_file_count++
    	write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Moving $file"
-	mv $file $targetfile -ErrorAction 'silentlycontinue' | Out-Null
+	mv $file $target_file -ErrorAction 'silentlycontinue' | Out-Null
 	
 	#
 	# This block fires in the case that the original file move is not successful.
@@ -173,11 +173,11 @@ foreach($file in $documents){
 	}
 	while(!$dupe_flag){
 		$rand = get-random -maximum 9999
-		$dupefile = $file | get-childitem
-		$dupepath = ".\Duplicates" + "\" + $dupefile.basename + "_" + $rand.toString() + $dupefile.extension
+		$dupe_file = $file | get-childitem
+		$dupe_path = ".\Duplicates" + "\" + $dupe_file.basename + "_" + $rand.toString() + $dupe_file.extension
 		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-		write-host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupepath.`n"
-		mv $file $dupepath -ErrorAction 'silentlycontinue' | Out-Null
+		write-host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupe_path.`n"
+		mv $file $dupe_path -ErrorAction 'silentlycontinue' | Out-Null
 		$dupe_flag = $?
 	}
 }
