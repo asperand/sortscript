@@ -1,5 +1,5 @@
 # Sorting procedure:
-# 
+#
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
 #
@@ -9,7 +9,7 @@
 #
 # YEAR is normally in format [YYYY].
 #
-# <YEAR/SUBFOLDER> IS FLEXIBLE. It will create a subfolder with whatever you give it. 
+# <YEAR/SUBFOLDER> IS FLEXIBLE. It will create a subfolder with whatever you give it.
 #
 # e.g. Undated-ACC-BuildingContract.pdf
 #
@@ -40,7 +40,7 @@ $default_dir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject" # CHAN
 $staging_dir = $default_dir + "\Staging" # No need to change this unless you want to rename the default structure.
 
 # only select PDF documents
-$documents = dir -include "*.pdf" -name
+$documents = Get-ChildItem -include "*.pdf" -name
 $total_file_count = $documents.length
 
 #
@@ -49,15 +49,15 @@ $total_file_count = $documents.length
 
 # Give our user a warning if no files were found.
 if($total_file_count -eq 0){
-	write-host -BackgroundColor "darkyellow" "`nWARN:"
-	write-host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $default_dir"
+	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+	Write-Host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $default_dir"
 	$warning_count++
 }
 
 # Give our user a warning if the current working directory is wrong.
 if($pwd.path -ne $staging_dir){
-	write-host -BackgroundColor "darkyellow" "`nWARN:"
-	write-host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $staging_dir`nor change the home directory."
+	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+	Write-Host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $staging_dir`nor change the home directory."
 	$warning_count++
 }
 
@@ -66,11 +66,11 @@ if($pwd.path -ne $staging_dir){
 #
 
 foreach($file in $documents){
-	
+
 	# You can feel free to change the delimiter to whatever character you prefer here if you want to change the naming convention
 
 	$file_info=$file -split "-"
-	
+
 	#
 	# Some error checking on the name of the file before we try to sort it.
 	# Incorrectly spelled categories, subfolders, or filenames are fine,
@@ -79,13 +79,13 @@ foreach($file in $documents){
 	#
 
 	if(($file_info.length -ne 3) -or 			# Error of too little or too many dashes
-		($file_info[0] -eq $default_dir + "\Staging\") -or 	# Error of missing subfolder name or wrong use of dashes
+		($file_info[0] -eq $default_dir + $staging_dir + "\") -or 	# Error of missing subfolder name or wrong use of dashes
 		($file_info[2] -eq ".pdf") -or 			# Error of missing filename or wrong use of dashes
 		($file_info.contains("")) 			# Error of an empty string anywhere in the array
 
 	){ # Print our error message
-		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-		write-host -NoNewLine -BackgroundColor Black " Skipping $file due to incorrect naming convention."
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor Black " Skipping $file due to incorrect naming convention."
 		$incorrect_file_count++
 		continue
 	}
@@ -142,22 +142,22 @@ foreach($file in $documents){
 			break
 		}
 		default { # If the given category isn't found
-			$category="Staging\Unsorted"
-			write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:" 
-			write-host -NoNewLine -BackgroundColor Black " Incorrect category $file_info[1]. Sending to .\Unsorted`n"
+			$category= $staging_dir + "\Unsorted" # Feel free to change the end string if adjusting the file structure.
+			Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+			Write-Host -NoNewLine -BackgroundColor Black " Incorrect category $file_info[1]. Sending to .\Unsorted`n"
 			$unsorted_file_count++
 			break
 		}
    	}
 	$categorydir = $default_dir + "\" + $category + "\"
-   	ni -itemtype Directory -force -path $categorydir | Out-Null # ensure category directory exists
+   	new-item -itemtype Directory -force -path $categorydir | Out-Null # ensure category directory exists
     	$target_path=$default_dir + "\" + $category + "\" + $file_info[0]
-   	ni -itemtype Directory -force -path $target_path | Out-Null # ensure year directory exists
+   	new-item -itemtype Directory -force -path $target_path | Out-Null # ensure year directory exists
    	$target_file=$target_path+"\"+$file_info[2]
 	$current_file_count++
    	write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Moving $file"
 	mv $file $target_file -ErrorAction 'silentlycontinue' | Out-Null
-	
+
 	#
 	# This block fires in the case that the original file move is not successful.
 	# While there could be many reasons, the most likely culprit is a duplicate file name.
@@ -168,15 +168,15 @@ foreach($file in $documents){
 
 	# This funky bit of code is needed for counting dupe files correctly, but the overall functionality stays the same
 	$dupe_flag = $?
-	if(!$dupe_flag){ 
+	if(!$dupe_flag){
 		$dupe_file_count++
 	}
 	while(!$dupe_flag){
 		$rand = get-random -maximum 9999
 		$dupe_file = $file | get-childitem
 		$dupe_path = ".\Duplicates" + "\" + $dupe_file.basename + "_" + $rand.toString() + $dupe_file.extension
-		write-host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-		write-host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupe_path.`n"
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupe_path.`n"
 		mv $file $dupe_path -ErrorAction 'silentlycontinue' | Out-Null
 		$dupe_flag = $?
 	}
@@ -185,24 +185,23 @@ foreach($file in $documents){
 write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -Completed
 $total_file_count = 0 # Extra line to fix the problem of file counts carrying over from session to session.
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0) -and ($warning_count -eq 0)){
-	write-host -ForegroundColor green "`nScript finished with zero errors!!!"
+	Write-Host -ForegroundColor green "`nScript finished with zero errors!!!"
 }
 else{ # This could use a bit of cleanup.
-	write-host -ForegroundColor yellow "`n`nScript finished with:"
-	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
+	Write-Host -ForegroundColor yellow "`n`nScript finished with:"
+	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$incorrect_file_count skipped file(s)"
-	if($unsorted_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
+	Write-Host "$incorrect_file_count skipped file(s)"
+	if($unsorted_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$unsorted_file_count file(s) sent to \Unsorted\"
-	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}	
+	Write-Host "$unsorted_file_count file(s) sent to \Unsorted\"
+	if($dupe_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
-	write-host "$dupe_file_count duplicate file(s) sent to \Duplicates\"
+	Write-Host "$dupe_file_count duplicate file(s) sent to \Duplicates\"
 	if($warning_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "DarkYellow"}
-	write-host "$warning_count system warning(s) thrown"
-	$Host.UI.RawUI.ForegroundColor = "White"
+	Write-Host "$warning_count system warning(s) thrown"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
-Write-Host -NoNewLine "`nPress any key to close window...";
-$key_pressed = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+Write-Output "`nPress any key to continue...";
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
