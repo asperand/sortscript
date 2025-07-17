@@ -3,14 +3,17 @@ $window_height = [Console]::WindowHeight
 [Console]::SetCursorPosition(0, ($window_height - 1))
 $current_file_count = 0
 $user_input = Read-Host -Prompt "Enter filetype to modify (Default: .pdf)"
-if($user_input = ""){
+if($user_input -eq ""){
 	$filetype = "*.pdf"
 }
 else{
-	$cleaned_input = $user_input.replace('[^0-9A-Za-z_]')
+	$cleaned_input = $user_input -replace '[^0-9A-Za-z_]'
 	$filetype = "*." + $cleaned_input
 }
 $documents = Get-ChildItem -include $filetype -name
+if(!$documents){
+	Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype. Did you enter it correctly?"	
+}
 $total_file_count = $documents.length
 $ap_str = Read-Host -Prompt "Enter string you would like to add to each $filetype file (e.g. -MEM-AHRI_MEMBERDOCS)`n"
 $ap_flag = "A"
