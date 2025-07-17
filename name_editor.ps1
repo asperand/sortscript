@@ -27,7 +27,7 @@ while($true){
 		Write-Output "Please enter either A or P."
 	}
 }
-Get-ChildItem -Path $pwd -Filter "*.pdf" | ForEach-Object {
+Get-ChildItem -Path $pwd -Filter $filetype | ForEach-Object {
     	write-progress -Id 0 -Activity "Renaming Files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Editing $_"
 	if($ap_flag = "A"){
 		$new_name = $_.BaseName + $ap_str + $_.Extension
