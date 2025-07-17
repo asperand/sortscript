@@ -1,8 +1,16 @@
-# Get every PDF and append or prepend a string of your choosing to it.
+# Get every instance of a filetype and append or prepend a string of your choosing to it.
 $window_height = [Console]::WindowHeight
 [Console]::SetCursorPosition(0, ($window_height - 1))
 $current_file_count = 0
-$documents = Get-ChildItem -include "*.pdf" -name
+$user_input = Read-Host -Prompt "Enter filetype to modify (Default: .pdf)"
+if($user_input = ""){
+	$filetype = "*.pdf"
+}
+else{
+	$cleaned_input = $user_input.replace('[^0-9A-Za-z_]')
+	$filetype = "*." + $cleaned_input
+}
+$documents = Get-ChildItem -include $filetype -name
 $total_file_count = $documents.length
 $ap_str = Read-Host -Prompt "Enter string you would like to add to each .pdf file (e.g. -MEM-AHRI_MEMBERDOCS)`n"
 $ap_flag = "A"
