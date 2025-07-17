@@ -12,7 +12,7 @@ else{
 }
 $documents = Get-ChildItem -include $filetype -name
 $total_file_count = $documents.length
-$ap_str = Read-Host -Prompt "Enter string you would like to add to each .pdf file (e.g. -MEM-AHRI_MEMBERDOCS)`n"
+$ap_str = Read-Host -Prompt "Enter string you would like to add to each $filetype file (e.g. -MEM-AHRI_MEMBERDOCS)`n"
 $ap_flag = "A"
 while($true){
 	$aop = Read-Host -Prompt "Would you like to (P)repend or (A)ppend the string? (Default: Append)"
