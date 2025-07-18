@@ -3,7 +3,7 @@
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
 #
-# e.g. 1999-ACC-AHRI990c.pdf
+# e.g. 1999-ACC-990_AND_1099
 #
 #
 #
@@ -36,12 +36,38 @@ $warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 
-$default_dir = "Z:\Shared\AHRI General Share (AllShare)\ArchivingProject" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
+$default_dir = "C:\Shared\AllUsers\Archive" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
 $staging_dir = $default_dir + "\Staging" # No need to change this unless you want to rename the default structure.
 
-# only select PDF documents
-$documents = Get-ChildItem -include "*.pdf" -name
+# Allow user to set the file extension, default to PDF
+# Copied code from the other script
+
+$user_input = Read-Host -Prompt "Enter filetype to modify (Default: .pdf)"
+if($user_input -eq ""){
+	$filetype = "*.pdf"
+}
+else{
+	$cleaned_input = $user_input -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters
+	$filetype = "*." + $cleaned_input # Create a usable file extension for Get-ChildItem
+}
+$documents = Get-ChildItem -include $filetype -name
+if(!$documents){
+	Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype. Did you enter it correctly?"
+	$second_try = Read-Host -Prompt "Enter filetype to modify (Default: no change)"
+	if($second_try -ne ""){
+		$cleaned_input = $second_try -replace '[^0-9A-Za-z_]'
+		$filetype = "*." + $cleaned_input
+	}
+	$documents = Get-ChildItem -include $filetype -name
+	if(!$documents){
+		Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype."
+		Write-Output "`nPress any key to exit script...";
+		$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+		exit
+	}
+}
 $total_file_count = $documents.length
+$extension_checker = "." + $cleaned_input # This is a messy way of doing this, but it's necessary for our error checking.
 
 #
 # Some extra warnings to ensure our user is using the script correctly.
@@ -80,7 +106,7 @@ foreach($file in $documents){
 
 	if(($file_info.length -ne 3) -or 			# Error of too little or too many dashes
 		($file_info[0] -eq $default_dir + $staging_dir + "\") -or 	# Error of missing subfolder name or wrong use of dashes
-		($file_info[2] -eq ".pdf") -or 			# Error of missing filename or wrong use of dashes
+		($file_info[2] -eq $extension_checker) -or 			# Error of missing filename or wrong use of dashes
 		($file_info.contains("")) 			# Error of an empty string anywhere in the array
 
 	){ # Print our error message
