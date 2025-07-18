@@ -36,7 +36,7 @@ $warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 
-$default_dir = "C:\Shared\AllUsers\Archive" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
+$default_dir = "C:\TestFolder\Archive" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
 $staging_dir = $default_dir + "\Staging" # No need to change this unless you want to rename the default structure.
 
 # Allow user to set the file extension, default to PDF
