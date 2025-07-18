@@ -62,11 +62,28 @@ if(!$documents){
 	$documents = Get-ChildItem -include $filetype -name
 	if(!$documents){
 		Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype."
-		Write-Output "`nPress any key to exit script...";
-		$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-		exit
+		while($true){
+			[Console]::SetCursorPosition(0, ($window_height - 1))
+			$exit_op = Read-Host -Prompt "Would you like to continue with no selected files? (y/n, default: Y)"
+			if(($exit_op -eq "Y") -or ($exit_op -eq "")){
+				break;
+			}
+			elseif($exit_op -eq "n"){
+				ap_flag = "P"
+				break
+			}
+			else{
+				Write-Host -NoNewLine -ForegroundColor Red "Please enter either Y, N, or press enter."
+				Start-Sleep -seconds 2
+			}
+			
+			Clear-Host
+		}
 	}
 }
+Clear-Host # Clean up the user input text
+[Console]::SetCursorPosition(0, ($window_height - 1)) # Reset console position to bottom
+
 $total_file_count = $documents.length
 $extension_checker = "." + $cleaned_input # This is a messy way of doing this, but it's necessary for our error checking.
 
