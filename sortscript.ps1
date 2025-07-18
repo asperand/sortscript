@@ -143,8 +143,8 @@ foreach($file in $documents){
 			$category="Minutes"
 			break
 		}
-    		"NATE" {
-			$category="NATE Documents"
+    		"BANK" {
+			$category="Banking Documents"
 			break
 		}
     		"REP" {
