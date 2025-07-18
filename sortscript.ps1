@@ -36,8 +36,8 @@ $warning_count = 0
 
 # Hard-coded home directory to ensure our files are going in the right place
 
-$default_dir = "C:\TestFolder\Archive" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
-$staging_name = "Staging"
+$default_dir = "C:\TestFolder\Archive" # CHANGE THIS IF THE LOCATION OF THE OUTPUT FOLDER CHANGES
+$staging_name = "Staging" # CHANGE THIS IF YOU WANT TO CHANGE THE LOCATION OF THE SCRIPT AND FILES
 $staging_dir = $default_dir + "\" + $staging_name
 
 # Allow user to set the file extension, default to PDF
