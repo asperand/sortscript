@@ -37,7 +37,8 @@ $warning_count = 0
 # Hard-coded home directory to ensure our files are going in the right place
 
 $default_dir = "C:\TestFolder\Archive" # CHANGE THIS IF THE LOCATION OF THE FOLDER CHANGES
-$staging_dir = $default_dir + "\Staging" # No need to change this unless you want to rename the default structure.
+$staging_name = "Staging"
+$staging_dir = $default_dir + "\" + $staging_name
 
 # Allow user to set the file extension, default to PDF
 # Copied code from the other script
@@ -168,7 +169,7 @@ foreach($file in $documents){
 			break
 		}
 		default { # If the given category isn't found
-			$category= $staging_dir + "\Unsorted" # Feel free to change the end string if adjusting the file structure.
+			$category= $staging_name + "\Unsorted" # Feel free to change the end string if adjusting the file structure.
 			Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
 			Write-Host -NoNewLine -BackgroundColor Black " Incorrect category $file_info[1]. Sending to .\Unsorted`n"
 			$unsorted_file_count++
