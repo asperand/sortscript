@@ -43,7 +43,7 @@ $staging_dir = $default_dir + "\" + $staging_name
 # Allow user to set the file extension, default to PDF
 # Copied code from the other script
 
-$user_input = Read-Host -Prompt "Enter filetype to modify (Default: .pdf)"
+$user_input = Read-Host -Prompt "Enter filetype to move (Default: .pdf)"
 if($user_input -eq ""){
 	$filetype = "*.pdf"
 }
@@ -54,7 +54,7 @@ else{
 $documents = Get-ChildItem -include $filetype -name
 if(!$documents){
 	Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype. Did you enter it correctly?"
-	$second_try = Read-Host -Prompt "Enter filetype to modify (Default: no change)"
+	$second_try = Read-Host -Prompt "Enter filetype to move (Default: no change)"
 	if($second_try -ne ""){
 		$cleaned_input = $second_try -replace '[^0-9A-Za-z_]'
 		$filetype = "*." + $cleaned_input
