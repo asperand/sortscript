@@ -19,8 +19,6 @@
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
-### BEGIN SCRIPT
-
 # Setting our console cursor position to bottom to make space for write-progress
 
 $window_height = [Console]::WindowHeight
@@ -34,18 +32,44 @@ $dupe_file_count = 0
 $current_file_count = 0
 $warning_count = 0
 
-# Hard-coded home directory to ensure our files are going in the right place
+# Set our directory and file extension info
 
-$default_dir = "C:\TestFolder\Archive" # CHANGE THIS IF THE LOCATION OF THE OUTPUT FOLDER CHANGES
-$staging_name = "Staging" # CHANGE THIS IF YOU WANT TO CHANGE THE LOCATION OF THE SCRIPT AND FILES
-$staging_dir = $default_dir + "\" + $staging_name
+$cfg_file = get-content sortscript.cfg
+if(!$?){ # If the file doesn't exist
+	$default_dir = $pwd.path
+	$default_filetype = "*.pdf"
+	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+	Write-Host -ForegroundColor "yellow" "`nNo .cfg file was found. Setting default path to current working directory."
+}
+else{ # file was found, let's pull the content if we can
+	$path_line = select-string .\sortscript.cfg -pattern "TARGET_FOLDER"
+	$found_quotes = $path_line -match '"(.*?)"' # only text in quotes
+	if($found_quotes -eq $false){ # Coverage for no string match
+		default_dir = $pwd.path
+	}
+	$default_dir = $matches[1]
+	$default_dir_exists = test-path $default_dir
+	if($default_dir_exists -eq $false){ # Coverage for provided dir not existing
+		default_dir = $pwd.path
+	}
+	$extension_line = select-string .\sortscript.cfg -pattern "DEFAULT_FILE_TYPE"
+	$found_quotes = $extension_line -match '"(.*?)"' # only text in quotes
+	if($found_quotes -eq $false){ # Coverage for no string match
+		default_filetype = "*.pdf"
+	}
+	$default_filetype = $matches[1]
+	$cleaned_input = $default_filetype -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters
+	$default_filetype = "*." + $cleaned_input # Create a usable file extension for Get-ChildItem
+}
 
-# Allow user to set the file extension, default to PDF
-# Copied code from the other script
+$staging_dir = $pwd.path
+$staging_name = split-path -path $pwd -leaf
 
-$user_input = Read-Host -Prompt "Enter filetype to move (Default: .pdf)"
+# Allow user to set the file extension
+# Only fires if the flag is set in cfg
+$user_input = Read-Host -Prompt "Enter filetype to move (Default: $default_filetype)"
 if($user_input -eq ""){
-	$filetype = "*.pdf"
+	$filetype = $default_filetype
 }
 else{
 	$cleaned_input = $user_input -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters
@@ -69,15 +93,13 @@ if(!$documents){
 				break;
 			}
 			elseif($exit_op -eq "n"){
-				ap_flag = "P"
-				break
+				exit
 			}
 			else{
 				Write-Host -NoNewLine -ForegroundColor Red "Please enter either Y, N, or press enter."
 				Start-Sleep -seconds 2
+				Clear-Host
 			}
-			
-			Clear-Host
 		}
 	}
 }
@@ -95,13 +117,6 @@ $extension_checker = "." + $cleaned_input # This is a messy way of doing this, b
 if($total_file_count -eq 0){
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
 	Write-Host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $default_dir"
-	$warning_count++
-}
-
-# Give our user a warning if the current working directory is wrong.
-if($pwd.path -ne $staging_dir){
-	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-	Write-Host -ForegroundColor "yellow" "`nCurrent working directory is different than expected. Some functions may break!`nPlease move this script to $staging_dir`nor change the home directory."
 	$warning_count++
 }
 
@@ -186,7 +201,7 @@ foreach($file in $documents){
 			break
 		}
 		default { # If the given category isn't found
-			$category= $staging_name + "\Unsorted" # Feel free to change the end string if adjusting the file structure.
+			$category= "Unsorted"
 			Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
 			Write-Host -NoNewLine -BackgroundColor Black " Incorrect category " 
 			Write-Host -NoNewLine $file_info[1]
@@ -195,10 +210,18 @@ foreach($file in $documents){
 			break
 		}
    	}
-	$categorydir = $default_dir + "\" + $category + "\"
-   	new-item -itemtype Directory -force -path $categorydir | Out-Null # ensure category directory exists
-    	$target_path=$default_dir + "\" + $category + "\" + $file_info[0]
-   	new-item -itemtype Directory -force -path $target_path | Out-Null # ensure year directory exists
+
+	if($category -eq "Unsorted"){
+		$categorydir = $staging_dir + "\" + $category + "\"
+    		$target_path = $staging_dir + "\" + $category + "\" + $file_info[0]
+	}
+	else{
+		$categorydir = $default_dir + "\" + $category + "\"
+    		$target_path=$default_dir + "\" + $category + "\" + $file_info[0]
+	}
+
+	new-item -itemtype Directory -force -path $categorydir | Out-Null # ensure category directory exists
+   	new-item -itemtype Directory -force -path $target_path | Out-Null # ensure subdirectory exists
    	$target_file=$target_path+"\"+$file_info[2]
 	$current_file_count++
    	write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Moving $file"
