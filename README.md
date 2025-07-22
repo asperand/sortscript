@@ -1,4 +1,6 @@
 A simple file-sorter with some built-in customization. Also provided is a Append/Prepend file name editor. Originally created to automate filesorting for document archival.
 
-Eventually, it would be nice to convert this into a full-featured and customizable filesorter, but for right now directories and top-level categories are hard-coded and it does very little to FULLY prevent errors. There is somewhat of a robust warning system -- but for the program to work correctly, the user will have to use it correctly.
+Has a somewhat robust error checking system with plenty of descriptive warnings. It is somewhat difficult to break, but I'm sure its possible.
+
+Eventually, I'd love to do a re-write and re-organization to use functions so the code is a bit cleaner. I really wanted to challenge myself to do a script with NO functions and NO gotos.
 
