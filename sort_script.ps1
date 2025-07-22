@@ -32,6 +32,36 @@ $dupe_file_count = 0
 $current_file_count = 0
 $warning_count = 0
 
+# Get our tags and folder names from our tags.cfg file and place them into a hashmap
+$tags_map = @{}
+$tags_file = get-content tags.cfg | Out-String
+if(!$?){
+	$tags_map["DEFAULT_TAG"] = "Default"
+	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+	Write-Host -ForegroundColor "yellow" "`nCouldn't open tags.cfg. Are you sure it exists?`n"
+	$warning_count++
+}
+else{
+	$tags_result = $tags_file -match '{([^{]*?)}'
+	if($tags_result -eq $false){
+		$tags_map["DEFAULT_TAG"] = "Default"
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nCouldn't pull any tags from tags.cfg. Are you sure the syntax is correct?`n"
+		$warning_count++
+	}
+	else{
+		$raw_tags = $matches[1]
+		$raw_tags_array = $raw_tags -split "`n"
+		foreach($pair in $raw_tags_array){
+			if($pair -eq ""){ # Skip empties
+				continue
+			}
+			$split_items = $pair -split ":"
+			$tags_map[$split_items[0]] = $split_items[1]
+		}
+	}
+}
+
 # Set our directory and file extension info
 
 $cfg_file = get-content sortscript.cfg
@@ -109,7 +139,7 @@ if(!$documents){
 	}
 	$documents = Get-ChildItem -include $filetype -name
 	if(!$documents){
-		Write-Host -Foregroundcolor "yellow" "WARN: No files were selected with type $filetype."
+		Write-Host -Foregroundcolor "yellow" "WARN: You are about to select no files with type $filetype."
 		while($true){
 			[Console]::SetCursorPosition(0, ($window_height - 1))
 			$exit_op = Read-Host -Prompt "Would you like to continue with no selected files? (y/n, default: Y)"
@@ -141,7 +171,7 @@ $extension_checker = "." + $cleaned_input # This is a messy way of doing this, b
 # Give our user a warning if no files were found.
 if($total_file_count -eq 0){
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-	Write-Host -ForegroundColor "yellow" "`nNo files were selected by the script. `nIf the Staging folder is not empty, ensure your home directory is set correctly.`nCurrent home directory: $default_dir"
+	Write-Host -ForegroundColor "yellow" "`nNo files were selected by the script. You may be required to change the default extension in sortscript.cfg.`n"
 	$warning_count++
 }
 
@@ -174,66 +204,19 @@ foreach($file in $documents){
 		continue
 	}
 
-	#
-	# This switch block is where you can add new categories to the file reader.
-	# If you follow the same format, it should work with no problems as the script
-	# WILL ensure that a directory with name $category exists or is created before continuing.
-	#
+	# Find our category based on the tag we found in the filename
 
-	switch($file_info[1].toUpper()){ # assign correct directory name based on category written
-		"ACC" {
-			$category="Accounting"
-			break
-		}
-		"AG" {
-			$category="Agendas"
-			break
-		}
-		"ETC" {
-			$category="Etc Documents"
-			break
-		}
-		"MEM" {
-			$category="Membership"
-			break
-		}
-		"MIN" {
-			$category="Minutes"
-			break
-		}
-    		"BANK" {
-			$category="Banking Documents"
-			break
-		}
-    		"REP" {
-			$category="Reports"
-			break
-		}
-    		"LEG" {
-			$category="Legal"
-			break
-		}
-    		"RM" {
-			$category="Rulemaking"
-			break
-		}
-		"SD" {
-			$category="Staff Documents"
-			break
-		}
-		"HR" {
-			$category="HR"
-			break
-		}
-		default { # If the given category isn't found
-			$category= "Unsorted"
-			Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
-			Write-Host -NoNewLine -BackgroundColor Black " Incorrect category " 
-			Write-Host -NoNewLine $file_info[1]
-			Write-Host -NoNewLine ". Sending to .\Unsorted`n"
-			$unsorted_file_count++
-			break
-		}
+	if($tags_map.containskey($file_info[1])){
+		$category = $tags_map[$file_info[1]]
+		$category = $category -replace '[^0-9A-Za-z_]'
+	}
+	else{ # If the given category isn't found
+		$category= "Unsorted"
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor Black " Incorrect category " 
+		Write-Host -NoNewLine $file_info[1]
+		Write-Host -NoNewLine ". Sending to .\Unsorted`n"
+		$unsorted_file_count++
    	}
 
 	if($category -eq "Unsorted"){
