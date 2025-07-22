@@ -41,26 +41,51 @@ if(!$?){ # If the file doesn't exist
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
 	Write-Host -ForegroundColor "yellow" "`nNo .cfg file was found. Setting default path to current working directory."
 }
+
 else{ # file was found, let's pull the content if we can
 	$path_line = select-string .\sortscript.cfg -pattern "TARGET_FOLDER"
 	$found_quotes = $path_line -match '"(.*?)"' # only text in quotes
 	if($found_quotes -eq $false){ # Coverage for no string match
-		default_dir = $pwd.path
+		$default_dir = $pwd.path
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your target dir is correct?`n"
+		$warning_count++
 	}
 	$default_dir = $matches[1]
+	if($default_dir -eq ""){
+		$default_dir = $pwd.path
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nFound empty dir. Setting to default.`n"
+		$warning_count++
+	}
 	$default_dir_exists = test-path $default_dir
 	if($default_dir_exists -eq $false){ # Coverage for provided dir not existing
-		default_dir = $pwd.path
+		$default_dir = $pwd.path
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nProvided default target directory does not exist. Are you sure it's correctly set?`n"
+		$warning_count++
 	}
 	$extension_line = select-string .\sortscript.cfg -pattern "DEFAULT_FILE_TYPE"
 	$found_quotes = $extension_line -match '"(.*?)"' # only text in quotes
 	if($found_quotes -eq $false){ # Coverage for no string match
-		default_filetype = "*.pdf"
+		$default_filetype = "*.pdf"
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your default filetype is correct?`n"
+		$warning_count++
 	}
 	$default_filetype = $matches[1]
 	$cleaned_input = $default_filetype -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters
-	$default_filetype = "*." + $cleaned_input # Create a usable file extension for Get-ChildItem
+	if($cleaned_input -eq ""){
+		$default_filetype ="*.pdf"
+		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
+		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your default filetype is correct?`n"
+		$warning_count++
+	}
+	else{
+		$default_filetype = "*." + $cleaned_input
+	}
 }
+
 
 $staging_dir = $pwd.path
 $staging_name = split-path -path $pwd -leaf
