@@ -39,9 +39,9 @@ if(!$?){ # If the file doesn't exist
 	$default_dir = $pwd.path
 	$default_filetype = "*.pdf"
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-	Write-Host -ForegroundColor "yellow" "`nNo .cfg file was found. Setting default path to current working directory."
+	Write-Host -ForegroundColor "yellow" "`nNo .cfg file was found. Setting default path to current working directory.`n"
+	$warning_count++
 }
-
 else{ # file was found, let's pull the content if we can
 	$path_line = select-string .\sortscript.cfg -pattern "TARGET_FOLDER"
 	$found_quotes = $path_line -match '"(.*?)"' # only text in quotes
@@ -86,7 +86,6 @@ else{ # file was found, let's pull the content if we can
 	}
 }
 
-
 $staging_dir = $pwd.path
 $staging_name = split-path -path $pwd -leaf
 
@@ -130,6 +129,7 @@ if(!$documents){
 }
 Clear-Host # Clean up the user input text
 [Console]::SetCursorPosition(0, ($window_height - 1)) # Reset console position to bottom
+
 
 $total_file_count = $documents.length
 $extension_checker = "." + $cleaned_input # This is a messy way of doing this, but it's necessary for our error checking.
@@ -202,7 +202,7 @@ foreach($file in $documents){
 			break
 		}
     		"BANK" {
-			$category="Banking Documents"
+			$category="Baking Documents"
 			break
 		}
     		"REP" {
@@ -268,7 +268,9 @@ foreach($file in $documents){
 	while(!$dupe_flag){
 		$rand = get-random -maximum 9999
 		$dupe_file = $file | get-childitem
-		$dupe_path = ".\Duplicates" + "\" + $dupe_file.basename + "_" + $rand.toString() + $dupe_file.extension
+		$dupe_folder = $staging_dir + "\Duplicates"
+		new-item -itemtype Directory -force -path $dupe_folder | Out-Null # ensure category directory exists
+		$dupe_path = $dupe_folder + "\" + $dupe_file.basename + "_" + $rand.toString() + $dupe_file.extension
 		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
 		Write-Host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupe_path.`n"
 		mv $file $dupe_path -ErrorAction 'silentlycontinue' | Out-Null
