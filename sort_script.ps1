@@ -198,7 +198,7 @@ foreach($file in $documents){
 		($file_info.contains("")) 			# Error of an empty string anywhere in the array
 
 	){ # Print our error message
-		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nSKIP:"
 		Write-Host -NoNewLine -BackgroundColor Black " Skipping $file due to incorrect naming convention."
 		$incorrect_file_count++
 		continue
@@ -213,7 +213,7 @@ foreach($file in $documents){
 	}
 	else{ # If the given category isn't found
 		$category= "Unsorted"
-		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nNOT FOUND:"
 		Write-Host -NoNewLine -BackgroundColor Black " Incorrect category " 
 		Write-Host -NoNewLine $file_info[1]
 		Write-Host -NoNewLine ". Sending to .\Unsorted`n"
@@ -255,7 +255,7 @@ foreach($file in $documents){
 		$dupe_folder = $staging_dir + "\Duplicates"
 		new-item -itemtype Directory -force -path $dupe_folder | Out-Null # ensure category directory exists
 		$dupe_path = $dupe_folder + "\" + $dupe_file.basename + "_" + $rand.toString() + $dupe_file.extension
-		Write-Host -NoNewLine -BackgroundColor DarkRed "`nERROR:"
+		Write-Host -NoNewLine -BackgroundColor DarkRed "`nNO PATH:"
 		Write-Host -NoNewLine -BackgroundColor Black " File move failed, likely because filename already exists. Moving $file to $dupe_path.`n"
 		mv $file $dupe_path -ErrorAction 'silentlycontinue' | Out-Null
 		$dupe_flag = $?
@@ -282,8 +282,23 @@ else{ # This could use a bit of cleanup.
 	Write-Host "$dupe_file_count duplicate file(s) sent to \Duplicates\"
 	if($warning_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "DarkYellow"}
-	Write-Host "$warning_count system warning(s) thrown"
+	Write-Host "$warning_count system warning(s) thrown`n"
 }
 $Host.UI.RawUI.ForegroundColor = "White"
+if($incorrect_file_count -gt 5){
+	Write-Host -BackgroundColor DarkCyan "`nTIP:"
+	Write-Host "If your files are being skipped, ensure you are following the 3-dash naming convention."
+	Write-Host "e.g. SUBFOLDER-TAG-FILENAME.extension"
+}
+if($unsorted_file_count -gt 4){
+	Write-Host -BackgroundColor DarkCyan "`nTIP:"
+	Write-Host "If you are using a custom tag, make sure it's added in the tags.cfg file."
+}
+if($dupe_file_count -gt 2){
+	Write-Host -BackgroundColor DarkCyan "`nTIP:"
+	Write-Host "If your files are getting flagged as dupes, it may be an issue with permissions rather than duplicates."
+	Write-Host "Ensure you have permissions to write to the target directory set in sortscript.cfg."
+}
+
 Write-Output "`nPress any key to continue...";
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
