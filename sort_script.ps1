@@ -2,20 +2,9 @@
 #
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
-#
 # e.g. 1999-ACC-990_AND_1099
 #
-#
-#
-# YEAR is normally in format [YYYY].
-#
-# <YEAR/SUBFOLDER> IS FLEXIBLE. It will create a subfolder with whatever you give it.
-#
-# e.g. Undated-ACC-BuildingContract.pdf
-#
-# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add the logic to the switch statement.
-#
-#
+# EDIT tags and target directory using the provided .cfg files.
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
