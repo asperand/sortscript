@@ -2,9 +2,20 @@
 #
 # Name files in this format: <YEAR/SUBFOLDER> - <TOP-LEVEL CATEGORY> - <NAME OF DOCUMENT>
 #
+#
 # e.g. 1999-ACC-990_AND_1099
 #
-# EDIT tags and target directory using the provided .cfg files.
+#
+#
+# YEAR is normally in format [YYYY].
+#
+# <YEAR/SUBFOLDER> IS FLEXIBLE. It will create a subfolder with whatever you give it.
+#
+# e.g. Undated-ACC-BuildingContract.pdf
+#
+# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add the logic to the switch statement.
+#
+#
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
@@ -23,7 +34,7 @@ $warning_count = 0
 
 # Get our tags and folder names from our tags.cfg file and place them into a hashmap
 $tags_map = @{}
-$tags_file = get-content tags.cfg | Out-String
+$tags_file = get-content -erroraction 'silentlycontinue' tags.cfg | Out-String
 if(!$?){
 	$tags_map["DEFAULT_TAG"] = "Default"
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
@@ -53,12 +64,12 @@ else{
 
 # Set our directory and file extension info
 
-$cfg_file = get-content sortscript.cfg
+$cfg_file = get-content -erroraction 'silentlycontinue' sortscript.cfg
 if(!$?){ # If the file doesn't exist
 	$default_dir = $pwd.path
 	$default_filetype = "*.pdf"
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-	Write-Host -ForegroundColor "yellow" "`nNo .cfg file was found. Setting default path to current working directory.`n"
+	Write-Host -ForegroundColor "yellow" "`nsortscript.cfg file was not found. Setting default path to current working directory.`n"
 	$warning_count++
 }
 else{ # file was found, let's pull the content if we can
@@ -67,14 +78,14 @@ else{ # file was found, let's pull the content if we can
 	if($found_quotes -eq $false){ # Coverage for no string match
 		$default_dir = $pwd.path
 		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your target dir is correct?`n"
+		Write-Host -ForegroundColor "yellow" "`nError processing the sortscript.cfg file. Are you sure your target dir is correct?`n"
 		$warning_count++
 	}
 	$default_dir = $matches[1]
 	if($default_dir -eq ""){
 		$default_dir = $pwd.path
 		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-		Write-Host -ForegroundColor "yellow" "`nFound empty dir. Setting to default.`n"
+		Write-Host -ForegroundColor "yellow" "`nFound empty target in sortscript.cfg. Setting to default.`n"
 		$warning_count++
 	}
 	$default_dir_exists = test-path $default_dir
@@ -89,7 +100,7 @@ else{ # file was found, let's pull the content if we can
 	if($found_quotes -eq $false){ # Coverage for no string match
 		$default_filetype = "*.pdf"
 		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your default filetype is correct?`n"
+		Write-Host -ForegroundColor "yellow" "`nError processing the sortscript.cfg file. Are you sure your default filetype is correct?`n"
 		$warning_count++
 	}
 	$default_filetype = $matches[1]
@@ -97,7 +108,7 @@ else{ # file was found, let's pull the content if we can
 	if($cleaned_input -eq ""){
 		$default_filetype ="*.pdf"
 		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
-		Write-Host -ForegroundColor "yellow" "`nError processing the .cfg file. Are you sure your default filetype is correct?`n"
+		Write-Host -ForegroundColor "yellow" "`nError processing the sortscript.cfg file. Are you sure your default filetype is correct?`n"
 		$warning_count++
 	}
 	else{
@@ -197,7 +208,8 @@ foreach($file in $documents){
 
 	if($tags_map.containskey($file_info[1])){
 		$category = $tags_map[$file_info[1]]
-		$category = $category -replace '[^0-9A-Za-z_]'
+		$category = $category -replace '[^0-9A-Za-z_]' # TODO: We should be a bit more conservative about what we're filtering.
+		# Ideally, we should just remove illegal path characters and control characters from the string
 	}
 	else{ # If the given category isn't found
 		$category= "Unsorted"
