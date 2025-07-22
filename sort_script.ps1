@@ -202,7 +202,7 @@ foreach($file in $documents){
 			break
 		}
     		"BANK" {
-			$category="Baking Documents"
+			$category="Banking Documents"
 			break
 		}
     		"REP" {
