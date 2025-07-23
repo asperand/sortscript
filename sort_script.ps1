@@ -24,7 +24,7 @@
 $window_height = [Console]::WindowHeight
 [Console]::SetCursorPosition(0, ($window_height - 1))
 
-# These are for better output when the script finishes.
+# These are for better tracking and output when the script finishes.
 
 $incorrect_file_count = 0
 $unsorted_file_count = 0
@@ -32,7 +32,18 @@ $dupe_file_count = 0
 $current_file_count = 0
 $warning_count = 0
 
+#
 # Get our tags and folder names from our tags.cfg file and place them into a hashmap
+#
+
+##
+## TODO: I'd love to be able to have custom locations rather than just the subfolder system.
+## e.g. TAG:"C:\Users\Ryan\TAG"
+## However, it would require a full re-write of how categories and files get moved.
+## It would require checking when the category gets checked to see if it's a path, and then we would have to ensure it exists, and then we would move the file there.
+## Not necessarily too difficult, but I don't see the point for such a limited scope tool. If I were to fully rewrite this script from the ground up I would integrate it with no hesitation.
+##
+
 $tags_map = @{}
 $tags_file = get-content -erroraction 'silentlycontinue' tags.cfg | Out-String
 if(!$?){
@@ -62,7 +73,9 @@ else{
 	}
 }
 
-# Set our directory and file extension info
+#
+# Set our directory and file extension info from the info provided in sortscript.cfg
+#
 
 $cfg_file = get-content -erroraction 'silentlycontinue' sortscript.cfg
 if(!$?){ # If the file doesn't exist
@@ -116,11 +129,21 @@ else{ # file was found, let's pull the content if we can
 	}
 }
 
+# For now, the staging dir will *always* be the working directory of the script.
+
 $staging_dir = $pwd.path
 $staging_name = split-path -path $pwd -leaf
 
+##
+## TODO: We should probably check to see if both provided directories (Target and Staging) are accessible for both read and write.
+##
+
+#
 # Allow user to set the file extension
-# Only fires if the flag is set in cfg
+#
+# Has a default fallback extension indicated in sortscript.cfg. Also gives users a chance to correct their input in case no files are selected
+#
+
 $user_input = Read-Host -Prompt "Enter filetype to move (Default: $default_filetype)"
 if($user_input -eq ""){
 	$filetype = $default_filetype
@@ -157,18 +180,14 @@ if(!$documents){
 		}
 	}
 }
+
 Clear-Host # Clean up the user input text
 [Console]::SetCursorPosition(0, ($window_height - 1)) # Reset console position to bottom
-
 
 $total_file_count = $documents.length
 $extension_checker = "." + $cleaned_input # This is a messy way of doing this, but it's necessary for our error checking.
 
-#
-# Some extra warnings to ensure our user is using the script correctly.
-#
-
-# Give our user a warning if no files were found.
+# Give our user a warning if no files were found. They should have been warned before, but this covers the case of something else breaking
 if($total_file_count -eq 0){
 	Write-Host -BackgroundColor "darkyellow" "`nWARN:"
 	Write-Host -ForegroundColor "yellow" "`nNo files were selected by the script. You may be required to change the default extension in sortscript.cfg.`n"
@@ -181,7 +200,9 @@ if($total_file_count -eq 0){
 
 foreach($file in $documents){
 
-	# You can feel free to change the delimiter to whatever character you prefer here if you want to change the naming convention
+	##
+	## TODO: It would be nice to change how the naming convention works to make it more flexible. Perhaps customizable in .cfg?
+	##
 
 	$file_info=$file -split "-"
 
@@ -206,12 +227,12 @@ foreach($file in $documents){
 
 	# Find our category based on the tag we found in the filename
 
-	if($tags_map.containskey($file_info[1])){
+	if($tags_map.containskey($file_info[1])){ # Is the TAG provided in the name within our tag list we pulled from tags.cfg?
 		$category = $tags_map[$file_info[1]]
 		$category = $category -replace '[^0-9A-Za-z_]' # TODO: We should be a bit more conservative about what we're filtering.
 		# Ideally, we should just remove illegal path characters and control characters from the string
 	}
-	else{ # If the given category isn't found
+	else{ # If the given tag category isn't found
 		$category= "Unsorted"
 		Write-Host -NoNewLine -BackgroundColor DarkRed "`nNOT FOUND:"
 		Write-Host -NoNewLine -BackgroundColor Black " Incorrect category " 
@@ -220,11 +241,11 @@ foreach($file in $documents){
 		$unsorted_file_count++
    	}
 
-	if($category -eq "Unsorted"){
+	if($category -eq "Unsorted"){ # If it's unsorted, we want it to go into the staging folder under the Unsorted folder
 		$categorydir = $staging_dir + "\" + $category + "\"
     		$target_path = $staging_dir + "\" + $category + "\" + $file_info[0]
 	}
-	else{
+	else{ # Otherwise, we can just send it to the target
 		$categorydir = $default_dir + "\" + $category + "\"
     		$target_path=$default_dir + "\" + $category + "\" + $file_info[0]
 	}
@@ -264,12 +285,15 @@ foreach($file in $documents){
 # All done! If there are no errors, we can celebrate! Otherwise, list out our problems.
 write-progress -Id 0 -Activity "Moving files" -Status "$current_file_count / $total_file_count" -Completed
 # Extra lines to fix the problem of file counts carrying over from session to session.
+# I don't know if this is actually necessary...
 $total_file_count = 0 
 Remove-Variable -Name documents
+
 if(($incorrect_file_count -eq 0) -and ($unsorted_file_count -eq 0) -and ($dupe_file_count -eq 0) -and ($warning_count -eq 0)){
-	Write-Host -ForegroundColor green "`nScript finished with zero errors!!!"
+	Write-Host -ForegroundColor green "`nScript finished with zero errors!"
 }
-else{ # This could use a bit of cleanup.
+
+else{ # This could use a bit of cleanup. But for now it's fine
 	Write-Host -ForegroundColor yellow "`n`nScript finished with:"
 	if($incorrect_file_count -eq 0){$Host.UI.RawUI.ForegroundColor = "Green"}
 	else{$Host.UI.RawUI.ForegroundColor = "Red"}
@@ -284,7 +308,15 @@ else{ # This could use a bit of cleanup.
 	else{$Host.UI.RawUI.ForegroundColor = "DarkYellow"}
 	Write-Host "$warning_count system warning(s) thrown`n"
 }
+
 $Host.UI.RawUI.ForegroundColor = "White"
+
+#
+# If the user made some major mistakes, we can let them know about how to fix them.
+# The one that will be most useful is the duplicate one, as the files DO get treated as dupes even if they're not when the file moving fails.
+# This script doesn't necessarily check if the directory can be written to, just that it exists.
+#
+
 if($incorrect_file_count -gt 5){
 	Write-Host -BackgroundColor DarkCyan "`nTIP:"
 	Write-Host "If your files are being skipped, ensure you are following the 3-dash naming convention."
@@ -300,5 +332,5 @@ if($dupe_file_count -gt 2){
 	Write-Host "Ensure you have permissions to write to the target directory set in sortscript.cfg."
 }
 
-Write-Output "`nPress any key to continue...";
+Write-Output "`nPress any key to close this window...";
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
