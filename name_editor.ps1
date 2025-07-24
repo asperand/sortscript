@@ -46,7 +46,7 @@ while($true){
 		break;
 	}
 	elseif($aop -eq "P"){
-		ap_flag = "P"
+		$ap_flag = "P"
 		break
 	}
 	else{
