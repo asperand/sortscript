@@ -229,7 +229,7 @@ foreach($file in $documents){
 
 	if($tags_map.containskey($file_info[1])){ # Is the TAG provided in the name within our tag list we pulled from tags.cfg?
 		$category = $tags_map[$file_info[1]]
-		$category = $category -replace '[^0-9A-Za-z_]' # TODO: We should be a bit more conservative about what we're filtering.
+		$category = $category -replace '[^0-9A-Za-z_ ]' # TODO: We should be a bit more conservative about what we're filtering.
 		# Ideally, we should just remove illegal path characters and control characters from the string
 	}
 	else{ # If the given tag category isn't found
