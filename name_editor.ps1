@@ -58,10 +58,10 @@ while($true){
 
 Get-ChildItem -Path $pwd -Filter $filetype | ForEach-Object {
     	write-progress -Id 0 -Activity "Renaming Files" -Status "$current_file_count / $total_file_count" -CurrentOperation "Editing $_"
-	if($ap_flag = "A"){
+	if($ap_flag -eq "A"){
 		$new_name = $_.BaseName + $ap_str + $_.Extension
 	}
-	elseif($ap_flag = "P"){
+	elseif($ap_flag -eq "P"){
 		$new_name = $ap_str + $_.BaseName + $_.Extension
 	}
     	Rename-Item -Path $_.FullName -NewName $new_name
