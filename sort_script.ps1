@@ -13,9 +13,7 @@
 #
 # e.g. Undated-ACC-BuildingContract.pdf
 #
-# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add the logic to the switch statement.
-#
-#
+# However, <TOP-LEVEL CATEGORY> is not flexible. You will need to create a tag and name the resulting folder in  tags.cfg
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
