@@ -13,7 +13,9 @@
 #
 # e.g. Undated-ACC-BuildingContract.pdf
 #
-# However, <TOP-LEVEL CATEGORY> is not flexible. You will need to create a tag and name the resulting folder in  tags.cfg
+# However, <TOP-LEVEL CATEGORY> is NOT flexible. You will need to add a tag to tags.cfg
+#
+#
 #
 # **** Run this file using Right Click -> Run with Powershell ****
 
@@ -115,7 +117,7 @@ else{ # file was found, let's pull the content if we can
 		$warning_count++
 	}
 	$default_filetype = $matches[1]
-	$cleaned_input = $default_filetype -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters
+	$cleaned_input = $default_filetype -replace '[^0-9A-Za-z_]' # Remove all non alphanumerical characters, excluding space and underscore
 	if($cleaned_input -eq ""){
 		$default_filetype ="*.pdf"
 		Write-Host -BackgroundColor "darkyellow" "`nWARN:"
@@ -141,6 +143,7 @@ $staging_name = split-path -path $pwd -leaf
 #
 # Has a default fallback extension indicated in sortscript.cfg. Also gives users a chance to correct their input in case no files are selected
 #
+
 
 $user_input = Read-Host -Prompt "Enter filetype to move (Default: $default_filetype)"
 if($user_input -eq ""){
