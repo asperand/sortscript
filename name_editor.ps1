@@ -39,15 +39,15 @@ $total_file_count = $documents.length # This is for Write-Progress' sake
 # Give the user the option of either prepending or appending the string
 
 $ap_str = Read-Host -Prompt "Enter string you would like to add to each $filetype file (e.g. -MEM-AHRI_MEMBERDOCS)`n"
-$ap_flag = "A"
 while($true){
-	$aop = Read-Host -Prompt "Would you like to (P)repend or (A)ppend the string? (Default: Append)"
-	if(($aop -eq "A") -or ($aop -eq "")){
+	$aop = Read-Host -Prompt "Would you like to (P)repend or (A)ppend the string? "
+	if(($aop -eq "A")){
+		$ap_flag = "A"
 		break;
 	}
 	elseif($aop -eq "P"){
 		$ap_flag = "P"
-		break
+		break;
 	}
 	else{
 		Write-Output "Please enter either A or P."
